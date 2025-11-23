@@ -1,0 +1,115 @@
+
+```{r}
+# The following command cleans the working memory and ensures that all references are to items created in this file.
+rm(list=(ls()))
+```
+
+```{r loaddata}
+# Data set containing sales of child car seats (coded as high or low) at 400 different stores
+mort <- read.csv("mort_data.csv")
+
+```
+
+```{r}
+table(mort$death)/nrow(mort)[1]
+```
+
+```{r preprocessing}
+#Let's perform some pre-processing
+
+#Convert the variables below into a factor.
+#There are only three categorical variables that we want to convert into a factor, but when you have many variables to convert, you may want to automate the process.
+
+mort$sex <- factor(mort$sex)
+mort$smoker <- factor(mort$smoker)
+mort$death <- factor(mort$death)
+
+```
+
+```{r train test split}
+#Let's split the data into a train (70%) and test (30%) sets.
+
+set.seed (23) # for reproducibility
+library(caret) 
+
+# Caret has a nice createdataPatrition function that creates a train and test split. It performs stratified sampling based on the target variable (label).
+
+index <- createDataPartition(y = mort$death,
+                                     p = .7,
+                                     list = FALSE)
+
+mort.train <- mort[index,] 
+mort.test <- mort[-index,]
+```
+
+```{r setup}
+
+library(rpart)
+library(rpart.plot)
+set.seed(23)
+
+# Set the formula with all variables.If you choose, you can manually type the formula.
+target <- "death"
+features <- c("attage",
+              "sex",
+              "smoker")
+
+
+
+rforest.f <- as.formula(paste(target, paste(features, collapse = "+"), sep = "~"))
+
+
+```
+
+
+```{r}
+
+set.seed(23)
+model.rf <- randomForest(formula = rforest.f, 
+                         data = mort.train,
+                         ntree = 50,
+                         mtry = 3, # The number of features to use at each split. 
+                         importance = TRUE
+                         )
+
+predictions <- predict(model.rf, mort.train) 
+
+table(predictions,mort.train$death)
+```
+
+
+```{r Accuracy on train data}
+# Accuracy
+# It has 99.2% accuracy on the train set.
+# With classification problems, make sure your data is not imbalanced.For imbalanced data, the overall accuracy maynot be important. 
+
+(250+111)/(250+111+2+1)
+```
+
+
+
+```{r}
+#Accuracy on the error data
+
+predictions_test <- predict(model.rf, mort.test) 
+
+table(predictions_test,mort.test$death)
+```
+
+
+```{r Accuracy on test data}
+# Accuracy
+# It has 87.7% accuracy on the test set
+# High accuacy, though the accuracy is not as high as that of the trainset.
+
+(99+36)/(99+36+8+11)
+```
+
+
+
+
+
+
+
+
+
